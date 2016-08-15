@@ -1,0 +1,4 @@
+^icinga2\..*\.services\.(icinga.icinga|icinga-cluster.cluster|icinga-cluster-zone-master.cluster-zone|http.http)\.perfdata\.
+^icinga2\..*\.services\..*\.(ldap|check-dns|ftp)\.perfdata\.
+^icinga2\.
+^stats\.counters\.dae\._scribe\.errors\.[a-z0-9]{12}\.

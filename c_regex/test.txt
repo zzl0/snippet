@@ -1,0 +1,13 @@
+0 icinga2.sindar33b.services.icinga.icinga.perfdata.min_latency.value 1
+0 icinga2.sindar33d.services.icinga-cluster.cluster.perfdata.api_num_not_conn_endpoints.value 1
+0 icinga2.sindar33c.services.icinga-cluster-zone-master.cluster-zone.perfdata.slave_lag.value 1
+0 icinga2.sindar2a.services.http.http.perfdata.time.value 1
+0 icinga2.khand7.services.load.redarrow-load.perfdata.load5.value 0
+1 icinga2.sa2.services.ldap.ldap.perfdata.time.value 1
+1 icinga2.khand7.services.load.redarrow-load.perfdata.load5.value 0
+2 icinga2.a 1
+2 icinga2.b 1
+2 icinga2.khand7.services.load.redarrow-load.perfdata.load5.value 1
+3 stats.counters.dae._scribe.errors.sindar25c.rate 0
+3 stats.counters.dae._scribe.errors.a76fa7e4fb9d.rate 1
+3 stats.counters.dae._scribe.errors.dbae3-docker.rate 0
