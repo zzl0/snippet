@@ -39,23 +39,28 @@ struct TestCase {
     int isMatch;
 };
 
-void free_lines(char **lines, int size) {
-    for (int i = 0; i < size; i++)
-        free(lines[i]);
-    free(lines);
+void free_lines(char **lines, int n) {
+    if (lines) {
+        for (int i = 0; i < n; i++)
+            free(lines[i]);
+        free(lines);
+    }
 }
 
 char **read_lines(char *filepath, int *size) {
-    char buf[LINE_BUF_SIZE];
+    int i = 0;
+    char **lines = NULL;
+
     FILE *f;
     f = fopen(filepath, "r");
-    check(f != NULL, "file open error: %s", filepath);
+    check(f != NULL, "File open error: %s", filepath);
+
+    int len;
+    char buf[LINE_BUF_SIZE];
     int cap = 10;
-    char **lines = (char **)malloc(sizeof(char *) * (cap));
+    lines = (char **)malloc(cap * sizeof(char *));
     check_mem(lines);
 
-    int i = 0;
-    int len;
     while (fgets(buf, LINE_BUF_SIZE, f) != NULL) {
         if (i == cap) {
             int new_cap = cap * 2;
@@ -82,30 +87,34 @@ error:
     return NULL;
 }
 
-void free_test_cases(struct TestCase **tests, int size) {
-    for (int i = 0; i < size; i++) {
-        if (tests[i]->str) free(tests[i]->str);
-        free(tests[i]);
+void free_test_cases(struct TestCase **tests, int n) {
+    if (tests) {
+        for (int i = 0; i < n; i++) {
+            if (tests[i]->str) free(tests[i]->str);
+            free(tests[i]);
+        }
+        free(tests);
     }
-    free(tests);
 }
 
 struct TestCase **parse_test_cases(char **lines, int size) {
+    int i = 0;
     struct TestCase **rs = (struct TestCase **)malloc(sizeof(struct TestCase*) * size);
     check_mem(rs);
+
     char *line;
     char *token;
     char *sep = " ";
-    int i = 0;
-    for (; i < size; i++) {
+    while (i < size) {
         struct TestCase *t = (struct TestCase *)malloc(sizeof(struct TestCase));
         check_mem(t);
         rs[i] = t;
-        line = lines[i];
+        line = lines[i++];
         token = strtok(line, sep);
         t->regex_idx = atoi(token);
         token = strtok(NULL, sep);
         t->str = strdup(token);
+        check_mem(t->str);
         token = strtok(NULL, sep);
         t->isMatch = atoi(token);
     }
@@ -120,14 +129,21 @@ int main() {
     int retcode = 1;
     char msgbuf[100];
 
+    int p_size = 0;
+    int t_size = 0;
+    int regcomp_cnt = 0;
+    char **patterns = NULL;
+    char **test_lines = NULL;
+    regex_t *regexs = NULL;
+    struct TestCase **tests = NULL;
+
     /* Read patterns */
-    int p_size;
-    char **patterns = read_lines("pattern.txt", &p_size);
+    patterns = read_lines("pattern.txt", &p_size);
+    if (!patterns) goto error;
 
     /* Compile regular expression */
-    regex_t *regexs = (regex_t *)malloc(sizeof(regex_t) * p_size);
+    regexs = (regex_t *)malloc(sizeof(regex_t) * p_size);
     check_mem(regexs);
-    int regcomp_cnt;
     for (int i=0; i < p_size; i++) {
         reti = regcomp(&regexs[i], patterns[i], REG_EXTENDED | REG_NOSUB);
         if (reti) {
@@ -138,23 +154,29 @@ int main() {
     }
 
     /* Read test cases */
-    int t_size;
-    char **test_lines = read_lines("test.txt", &t_size);
-    struct TestCase **tests = parse_test_cases(test_lines, t_size);
+    test_lines = read_lines("test.txt", &t_size);
+    if (!test_lines) goto error;
+
+    tests = parse_test_cases(test_lines, t_size);
+    if (!tests) goto error;
 
     /* Execute regular expression */
     for (int i=0; i < t_size; i++) {
         struct TestCase *t = tests[i];
+        char *state;
         reti = regexec(&regexs[t->regex_idx], t->str, 0, NULL, 0);
         if ((t->isMatch && reti == 0) || (!t->isMatch && reti)) {
             regerror(reti, &regexs[t->regex_idx], msgbuf, sizeof(msgbuf));
-            fprintf(stderr, "[Success] regex %d %s: %s\n", t->regex_idx, t->str, msgbuf);
+            state = "Success";
         } else {
             regerror(reti, &regexs[t->regex_idx], msgbuf, sizeof(msgbuf));
-            fprintf(stderr, "[Failed] regex %d %s: %s\n", t->regex_idx, t->str, msgbuf);
+            state = "Failed";
         }
+        fprintf(stderr, "[%s] regex %d %s: %s\n",
+                state, t->regex_idx, t->str, msgbuf);
     }
     retcode = 0;
+
 error:
     if (regexs) {
         for(int i = 0; i < regcomp_cnt; i++)
