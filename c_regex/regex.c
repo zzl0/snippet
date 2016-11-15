@@ -152,6 +152,7 @@ int main() {
             goto error;
         }
     }
+    regcomp_cnt = p_size;
 
     /* Read test cases */
     test_lines = read_lines("test.txt", &t_size);
